@@ -15,12 +15,12 @@ class PricingCalculator {
     }
 
     //Get all the codes in each group together
-    val codesForGroup = rates.map(r => (r.rateGroup, r.rateCode)).groupBy(_._1).mapValues(_.map(_._2)).toList
+    val codesForGroup: Seq[(String, Seq[String])] = rates.map(r => (r.rateGroup, r.rateCode)).groupBy(_._1).mapValues(_.map(_._2)).toList
     //Make sure no 2 rateGroups have a common rateCode
-    val rateGroupCounts = codesForGroup.flatMap(c => c._2).groupBy(cf => cf).mapValues(_.size).toList
+    val rateGroupCounts: Seq[(String, Int)] = codesForGroup.flatMap(c => c._2).groupBy(cf => cf).mapValues(_.size).toList
 
     //Make sure no Rate Code is found in more than 1 Rate Group
-    val rgc = rateGroupCounts.find(rgc => rgc._2 > 1)
+    val rgc: Option[(String, Int)] = rateGroupCounts.find(rgc => rgc._2 > 1)
     rgc match {
       case Some(s, i) => {
         println(s"Rate Code $s is found in $i Rate Groups. The same Rate Code cannot exist in multiple rate groups")

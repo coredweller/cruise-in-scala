@@ -26,6 +26,11 @@ class PricingCalculatorTests extends munit.FunSuite {
     assertEquals(result, Seq.empty)
   }
 
+  test("Given normal prices it should return correctly") {
+    val result = new PricingCalculator().getBestGroupPrices(DefaultRates, DefaultPrices)
+    assertEquals(result, DefaultResult)
+  }
+
   test("Given 2 cabins with the same price it should return correctly") {
     def prices = Seq(CabinPrice("CA", "M1", 200.00),
       CabinPrice("CA", "M2", 200.00),
