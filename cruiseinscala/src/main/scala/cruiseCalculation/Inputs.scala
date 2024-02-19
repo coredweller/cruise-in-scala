@@ -26,4 +26,9 @@ object Inputs {
     Promotion("P3", Seq("P1")), // P3 is not combinable with P1
     Promotion("P4", Seq("P2")), // P4 is not combinable with P2
     Promotion("P5", Seq("P2"))) // P5 is not combinable with P2
+  val DuplicatePromotions: Seq[Promotion] = Seq(Promotion("P1", Seq("P3")), // P1 is not combinable with P2 or P3
+    Promotion("P2", Seq("P4", "P5")), // P2 is not combinable with P4 and P5
+    Promotion("P3", Seq("P1")), // P3 is not combinable with P1
+    Promotion("P4", Seq("P2")), // P4 is not combinable with P2
+    Promotion("P1", Seq("P2"))) // P1 is not combinable with P2
 }

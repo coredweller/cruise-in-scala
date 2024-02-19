@@ -8,13 +8,16 @@ class PromotionCalculator {
       return Seq.empty
     }
 
+    val allProms = allPromotions.groupMapReduce(_.code)(_.notCombinableWith)(_.concat(_)).map(x => Promotion(x._1, x._2)).toSeq.sortBy(r => r.code)
+    println("ALL PROMS: " + allProms)
+
     //Get all of the codes by themselves. Ex: List(P1, P2, P3, P4, P5)
-    val allCodes: Seq[String] = allPromotions.map(ap => ap.code)
+    val allCodes: Seq[String] = allProms.map(ap => ap.code)
     //Get only the codes that are not itself or not immediately excluded. Ex: List((P1,List(P2, P4, P5)), (P2,List(P1, P3)), (P3,List(P2, P4, P5)), (P4,List(P1, P3, P5)), (P5,List(P1, P3, P4)))
-    val allValidCodes: Seq[(String, Seq[String])] = allPromotions.map(ap => (ap.code,
+    val allValidCodes: Seq[(String, Seq[String])] = allProms.map(ap => (ap.code,
       allCodes.filterNot(a => a == ap.code)
               .filterNot(all => ap.notCombinableWith.contains(all))
-              .filterNot(dd => canSourceBeCombinedWithItem(allPromotions, dd, ap.code))))
+              .filterNot(dd => canSourceBeCombinedWithItem(allProms, dd, ap.code))))
     println("ALL VALID CODES: " + allValidCodes)
 
     val result: Seq[PromotionCombo] = allValidCodes.flatMap(avc => {
@@ -26,9 +29,9 @@ class PromotionCalculator {
           //Check all of the ones that are not the current child and see if it can be combined with the current child
           val possibleValidPromotions: Seq[Option[String]] = avc._2.filter(a => a != currentChild).map(v => {
             println("V V V V V V: " + v)
-            val isValid = canSourceBeCombinedWithItem(allPromotions, v, currentChild)
+            val isValid = canSourceBeCombinedWithItem(allProms, v, currentChild)
             println(s"v:$v is not combinable with currentChild:$currentChild " + isValid)
-            val isValid2 = canSourceBeCombinedWithItem(allPromotions, currentChild, v)
+            val isValid2 = canSourceBeCombinedWithItem(allProms, currentChild, v)
             println(s"currentChild:$currentChild is not combinable with v:$v" + isValid2)
             isValid && isValid2 match {
               case true => None
@@ -39,13 +42,13 @@ class PromotionCalculator {
           })
           println("ALL POSSIBLE VALID PROMOTIONS: " + possibleValidPromotions)
           //Only take the ones that can be combined
-          val childCombo = if(canSourceBeCombinedWithItem(allPromotions, currentChild, avc._1)) { Seq.empty } else { Seq(Some(currentChild)) }
+          val childCombo = if(canSourceBeCombinedWithItem(allProms, currentChild, avc._1)) { Seq.empty } else { Seq(Some(currentChild)) }
           //val childCombo = Seq(currentChild)
           //val childCombo = Seq.empty
 
           val combos: Seq[Option[String]] = childCombo.concat(possibleValidPromotions.collect {
             case Some(s: String) => {
-              val checkAgainst = allPromotions.filterNot(_.code == s)
+              val checkAgainst = allProms.filterNot(_.code == s)
                             .filter(x => possibleValidPromotions.contains(Some(x.code)))
               println("Check Against: " + checkAgainst)
               val checkAgainst2 = checkAgainst.flatMap(_.notCombinableWith)
