@@ -12,6 +12,7 @@ class PromotionCalculatorTests extends munit.FunSuite {
                                                   PromotionCombo(Seq("P2", "P3")),
                                                   PromotionCombo(Seq("P3", "P4", "P5")))
 
+  //allCombinablePromotions
   test("Given no Promotions it should return an empty list") {
     val result = new PromotionCalculator().allCombinablePromotions(Seq.empty)
     assertEquals(result, Seq.empty)
@@ -59,5 +60,37 @@ class PromotionCalculatorTests extends munit.FunSuite {
 
     val result = new PromotionCalculator().allCombinablePromotions(promotions)
     assertEquals(result, SuccessfulCombos)
+  }
+
+  //combinablePromotions
+  test("Given no Promotions it should return an empty list") {
+    val result = new PromotionCalculator().combinablePromotions("P1", Seq.empty)
+    assertEquals(result, Seq.empty)
+  }
+
+  test("Given an empty promotion code it should return an empty list") {
+    val result = new PromotionCalculator().combinablePromotions("", Promotions)
+    assertEquals(result, Seq.empty)
+  }
+
+  test("Given a promotion code that doesn't exist in Promotion list should return an empty list") {
+    val result = new PromotionCalculator().combinablePromotions("P9", Promotions)
+    assertEquals(result, Seq.empty)
+  }
+
+  test("Given a P1 code, it should return 2 Combos successfully") {
+    val result = new PromotionCalculator().combinablePromotions("P1", Promotions)
+    assertEquals(result, Seq(
+      PromotionCombo(Seq("P1", "P2")),
+      PromotionCombo(Seq("P1", "P4", "P5"))
+    ))
+  }
+
+  test("Given a P3 code, it should return 2 Combos successfully") {
+    val result = new PromotionCalculator().combinablePromotions("P3", Promotions)
+    assertEquals(result, Seq(
+      PromotionCombo(Seq("P3", "P2")),
+      PromotionCombo(Seq("P3", "P4", "P5"))
+    ))
   }
 }

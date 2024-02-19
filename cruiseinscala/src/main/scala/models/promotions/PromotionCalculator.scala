@@ -8,8 +8,8 @@ class PromotionCalculator {
       return Seq.empty
     }
 
+    //Merge notCombinableWith lists for duplicate Promotions
     val allProms: Seq[Promotion] = allPromotions.groupMapReduce(_.code)(_.notCombinableWith)(_.concat(_)).map(x => Promotion(x._1, x._2)).toSeq.sortBy(r => r.code)
-    println("ALL PROMS: " + allProms)
 
     //Get only the codes that are not itself or not immediately excluded.
     //   Ex: List((P1,List(P2, P4, P5)), (P2,List(P1, P3)), (P3,List(P2, P4, P5)), (P4,List(P1, P3, P5)), (P5,List(P1, P3, P4)))
@@ -17,43 +17,33 @@ class PromotionCalculator {
       allProms.map(ap => ap.code).filterNot(a => a == ap.code)
               .filterNot(all => ap.notCombinableWith.contains(all))
               .filterNot(dd => canSourceBeCombinedWithItem(allProms, dd, ap.code))))
-    println("ALL VALID CODES: " + allValidCodes)
 
     val result: Seq[PromotionCombo] = allValidCodes.flatMap(avc => {
-        println("VALID CODE: " + avc)
-
         //Check each child (each set of possible valid codes is a child here)
         avc._2.map(currentChild => {
-          println("CURRENT CHILD: " + currentChild)
           //Check all of the ones that are not the current child and see if it can be combined with the current child
           val possibleValidPromotions: Seq[String] = avc._2.filterNot(a => a == currentChild).filterNot(v => {
             canSourceBeCombinedWithItem(allProms, v, currentChild)
               && canSourceBeCombinedWithItem(allProms, currentChild, v)})
-          println("ALL POSSIBLE VALID PROMOTIONS: " + possibleValidPromotions)
 
           //Only take the ones that can be combined with the original Promotion
           val childCombo: Seq[Option[String]] = if(canSourceBeCombinedWithItem(allProms, currentChild, avc._1)) { Seq.empty } else { Seq(Some(currentChild)) }
 
+          //Remove promotions that are notCombinableWith the others in the valid promotions list
           val combos: Seq[Option[String]] = childCombo.concat(possibleValidPromotions.collect {
             case s: String => {
               allProms.filterNot(_.code == s)
-                                          .filter(x => possibleValidPromotions.contains(x.code))
-                                          .flatMap(_.notCombinableWith)
-                                          .contains(s) match {
-                                                        case true => None
-                                                        case false => Some(s)
-                                                      }}})
+                      .filter(x => possibleValidPromotions.contains(x.code))
+                      .flatMap(_.notCombinableWith)
+                      .contains(s) match {
+                                    case true => None
+                                    case false => Some(s)
+                                  }}})
 
-          val combos2: Seq[String] = combos.collect {
-            case Some(s: String) => s
-          }
-
-          println("COMBOS COMBOS: " + combos)
-          println("COMBOS2 COMBOS2: " + combos2)
-          //Sort them so they can be distinctified later
-          val finalCombo: Seq[String] = Seq(avc._1).concat(combos2).sortBy(f => f)
-          println("FINAL FINAL FINAL: " + finalCombo)
-          PromotionCombo(finalCombo)
+          //Add the original code to the final combo
+          PromotionCombo(Seq(avc._1).concat(combos
+                                    .collect { case Some(s: String) => s })
+                                    .sortBy(f => f))
         })
       }).distinct
 
@@ -66,6 +56,11 @@ class PromotionCalculator {
   }
 
   def combinablePromotions(promotionCode: String, allPromotions: Seq[Promotion]): Seq[PromotionCombo] = {
+    if(allPromotions.isEmpty || !allPromotions.map(_.code).contains(promotionCode))
+    {
+      return Seq.empty
+    }
+
     //Get all combinations for all codes
     val allCombos: Seq[PromotionCombo] = allCombinablePromotions(allPromotions)
     //Filter the Combinations for only the desired promotionCode
